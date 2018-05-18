@@ -1,5 +1,11 @@
 var server = require('http').createServer();
 var io = require('socket.io')(server);
+var sqlite3 = require('sqlite3').verbose();
+var db = new sqlite3.Database('database.db', (err) => {
+    if(err != null) {
+        console.log("Opening database failed!");
+    }
+}); 
 
 io.on('connection', (client) => {
 
