@@ -10,7 +10,8 @@
   "license": "ISC",
   "devDependencies": {},
   "dependencies": {
+    "sha1": "^1.1.1",
     "socket.io": "^2.1.0",
-    "sqlite3": "^4.0.0"
+    "sqlite-sync": "^0.3.6"
   }
 }
