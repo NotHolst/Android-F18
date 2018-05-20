@@ -14,13 +14,20 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.github.nkzawa.emitter.Emitter;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.net.Socket;
 import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     private Menu menu;
-    private HashMap<String, String> friendlist;
+    private HashMap<String, Integer> friendlist; // Username and ID
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +57,29 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
         menu = navigationView.getMenu();
         friendlist = new HashMap<>();
-        updateFriendlist();
+        SocketService.getSocket().on("getFriendsResponse", (Object... data) -> {
+            JSONArray friends = ((JSONArray)data[0]);
+            friendlist.clear();
+
+            for(int i = 0; i < friends.length(); i++) {
+                try {
+                    friendlist.putIfAbsent((String) friends.getJSONArray(i).get(1), (Integer) friends.getJSONArray(i).get(0));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            this.runOnUiThread(() -> {
+                menu.clear();
+                menu.add(" - Friends - ");
+
+                friendlist.forEach((key, value) -> {
+                    menu.add(key);
+                });
+            });
+        });
+
+        SocketService.emit("getFriends");
 
         if(getSharedPreferences("AndroidChatApplication", 0)
                 .getString("token", null) == null) {
@@ -113,9 +142,5 @@ public class MainActivity extends AppCompatActivity
         } else {
             return false;
         }
-    }
-
-    public void updateFriendlist() {
-        //friendlist.putIfAbsent()
     }
 }
