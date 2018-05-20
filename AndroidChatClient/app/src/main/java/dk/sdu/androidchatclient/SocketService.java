@@ -30,7 +30,7 @@ public class SocketService extends Service {
         _sharedPreferences = sharedPreferences;
     }
 
-    private static Socket getSocket() {
+    public static Socket getSocket() {
         if(_socket == null) {
             try {
                 _socket = IO.socket("http://212.130.118.231:3000");
@@ -73,9 +73,5 @@ public class SocketService extends Service {
         }
 
         getSocket().emit(eventName, json);
-    }
-
-    public static void addHandler(String eventName, Emitter.Listener listener) {
-        _socket.on(eventName, listener);
     }
 }
