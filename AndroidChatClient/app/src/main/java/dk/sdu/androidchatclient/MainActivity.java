@@ -57,8 +57,9 @@ public class MainActivity extends AppCompatActivity
                 builder.setPositiveButton("Add", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        String txt = input.getText().toString();
-                        System.out.println("----> " + txt);
+                        HashMap<String, String> friendToAdd = new HashMap<>();
+                        friendToAdd.put("friendUsername", input.getText().toString());
+                        SocketService.emit("addFriend", friendToAdd);
                     }
                 });
                 builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -73,12 +74,12 @@ public class MainActivity extends AppCompatActivity
         });
 
         SocketService.getSocket().on("newFriendAdded", (Object... data) -> {
-            JSONArray friend = ((JSONArray)data[0]);
+            JSONObject friend = ((JSONObject)data[0]);
 
             this.runOnUiThread(() -> {
                 try {
-                    friendlist.putIfAbsent((String) friend.getJSONArray(0).get(1), (Integer) friend.getJSONArray(0).get(0));
-                    menu.add((String) friend.getJSONArray(0).get(1));
+                    friendlist.putIfAbsent((String) friend.get("Username"), (Integer) friend.getInt("ID"));
+                    menu.add((String) friend.get("Username"));
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -99,6 +100,10 @@ public class MainActivity extends AppCompatActivity
         SocketService.getSocket().on("friendlistReturned", (Object... data) -> {
             JSONArray friends = ((JSONArray)data[0]);
             friendlist.clear();
+
+            if(friends == null) {
+                return;
+            }
 
             for(int i = 0; i < friends.length(); i++) {
                 try {

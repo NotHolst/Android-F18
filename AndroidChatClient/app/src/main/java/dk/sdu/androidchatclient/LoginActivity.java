@@ -93,17 +93,16 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     attemptLogin();
                     return true;
                 }
+
                 return false;
             }
         });
 
         Button mEmailSignInButton = (Button) findViewById(R.id.sign_in);
-        mEmailSignInButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                attemptLogin();
-            }
-        });
+        mEmailSignInButton.setOnClickListener((view) -> { attemptLogin(); });
+
+        Button registerButton = (Button) findViewById(R.id.register);
+        registerButton.setOnClickListener((view) -> { attemptRegister(); });
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
@@ -182,6 +181,41 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     @Override
                     public void onResponse(JSONObject response) {
                         validateResponse(response);
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        // TODO: Handle error
+
+                    }
+                });
+
+        Volley.newRequestQueue(this).add(jsonObjectRequest);
+    }
+
+    private void attemptRegister() {
+        showProgress(true);
+
+        String url ="http://212.130.118.231:3000/register";
+        HashMap<String, String> JSONRequest = new HashMap<>();
+        JSONRequest.put("username", mUsernameView.getText().toString());
+        JSONRequest.put("password", mPasswordView.getText().toString());
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest
+                (Request.Method.POST, url, new JSONObject(JSONRequest), new Response.Listener<JSONObject>() {
+
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        showProgress(false);
+
+                        try {
+                            if(response.get("status").equals("success")) {
+                                attemptLogin();
+                            } else {
+
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }, new Response.ErrorListener() {
                     @Override
