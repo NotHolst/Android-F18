@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 
+import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.socketio.client.IO;
 import com.github.nkzawa.socketio.client.Socket;
 
@@ -72,5 +73,9 @@ public class SocketService extends Service {
         }
 
         getSocket().emit(eventName, json);
+    }
+
+    public static void addHandler(String eventName, Emitter.Listener listener) {
+        _socket.on(eventName, listener);
     }
 }
