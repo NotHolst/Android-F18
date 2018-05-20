@@ -181,11 +181,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
                     @Override
                     public void onResponse(JSONObject response) {
-                        try {
-                            validateResponse((String) response.get("status"), (String) response.get("token"));
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
+                        validateResponse(response);
                     }
                 }, new Response.ErrorListener() {
                     @Override
@@ -198,12 +194,16 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         Volley.newRequestQueue(this).add(jsonObjectRequest);
     }
 
-    private void validateResponse(String status, String token) {
-        if(status.equals("success")) {
-            getSharedPreferences("AndroidChatApplication", 0)
-                    .edit()
-                    .putString("token", token)
-                    .commit();
+    private void validateResponse(JSONObject response) {
+        if(response.has("token")) {
+            try {
+                getSharedPreferences("AndroidChatApplication", 0)
+                        .edit()
+                        .putString("token", response.get("token").toString())
+                        .commit();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
             startActivity(new Intent(this, MainActivity.class));
             finish();
         } else {
