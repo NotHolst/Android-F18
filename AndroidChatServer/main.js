@@ -64,8 +64,23 @@ app.post('/register', (req, res) => {
 
 });
 
+var connections = []
+
 io.on('connection', (client) => {
     console.log("Client connected.");
+
+    client.on('authenticate', (data) => {
+        console.log("client attempting auth")
+        let user;
+        try {
+            user = jwt.verify(data.token, JWT_SECRET);
+        } catch (err) {
+            client.emit('invalidToken');
+            return;
+        }
+        console.log(user.Username + " authenticated with token: " + data.token);
+        connections.push({ userID: user.ID, socket: client });
+    })
 
     client.on('createRoom', (data) => {
         let user;
@@ -80,8 +95,10 @@ io.on('connection', (client) => {
         if (!otherUserID) {
             return;
         }
-        db.createRoom(user.ID, data.otherUserID);
-
+        let roomID = db.createRoom(user.ID, data.otherUserID);
+        let responseData = { roomID: roomID };
+        connections.find(x => x.userID = user.ID).socket.emit('joinedRoom', data);
+        connections.find(x => x.userID = data.otherUserID).socket.emit('joinedRoom', data);
     });
 
     client.on('addToRoom', (data) => {
@@ -152,28 +169,28 @@ io.on('connection', (client) => {
 
     client.on('getFriends', (data) => {
         let user;
-        
+
         try {
             user = jwt.verify(data.token, JWT_SECRET);
         } catch (err) {
             client.emit('invalidToken');
             return;
         }
-        
+
         client.emit("getFriendsResponse", db.getFriends(user.ID));
         console.log(user.ID, db.getFriends(user.ID));
     });
 
     client.on('getRooms', (data) => {
         let user;
-        
+
         try {
             user = jwt.verify(data.token, JWT_SECRET);
         } catch (err) {
             client.emit('invalidToken');
             return;
         }
-        
+
         client.emit("getFriendsResponse", db.getRooms(user.ID));
     });
 

@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         SocketService.setSharedPreferences(getSharedPreferences("AndroidChatApplication", 0));
+        SocketService.emit("authenticate");
 
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -137,8 +138,14 @@ public class MainActivity extends AppCompatActivity
         drawer.closeDrawer(GravityCompat.START);
 
         if(friendlist.containsKey(item.getTitle())) {
-            // Open chat activity w/ user
+            // Open chat activity w/ user0
+            SocketService.emit("createRoom", new HashMap<String,String>(){{
+                put("otherUserID", String.valueOf((int)friendlist.get(item.getTitle())));
+            }});
+
+            //SocketService.get
             return true;
+
         } else {
             return false;
         }
