@@ -27,6 +27,7 @@ var facade = {
         let roomID = db.run("INSERT INTO Rooms (ID) VALUES (null)");
         db.run("INSERT INTO RoomMemberships (UserID, RoomID) VALUES (?,?)", [userID, roomID]);
         db.run("INSERT INTO RoomMemberships (UserID, RoomID) VALUES (?,?)", [otherUserID, roomID]);
+        return roomID;
     },
 
     addUserToRoom(userID, roomID) {

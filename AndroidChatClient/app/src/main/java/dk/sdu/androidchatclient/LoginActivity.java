@@ -200,7 +200,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 getSharedPreferences("AndroidChatApplication", 0)
                         .edit()
                         .putString("token", response.get("token").toString())
-                        .commit();
+                        .apply();
+
             } catch (JSONException e) {
                 e.printStackTrace();
             }
