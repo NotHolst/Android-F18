@@ -14,6 +14,9 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -49,6 +52,16 @@ public class MainActivity extends AppCompatActivity
             startActivity(new Intent(this, LoginActivity.class));
             finish();
         }
+
+        SocketConnection.getSocket().connect();
+        JSONObject json = new JSONObject();
+        try {
+            json.put("token", getSharedPreferences("AndroidChatApplication", 0).getString("token", null));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        SocketConnection.getSocket().emit("getFriends", json);
+
     }
 
     @Override

@@ -16,7 +16,7 @@ public class SocketConnection {
     public static Socket getSocket() {
         if(socket == null) {
             try {
-                socket = IO.socket("http://localhost:3000");
+                socket = IO.socket("http://212.130.118.231:3000");
             } catch (URISyntaxException e) {
                 e.printStackTrace();
             }
