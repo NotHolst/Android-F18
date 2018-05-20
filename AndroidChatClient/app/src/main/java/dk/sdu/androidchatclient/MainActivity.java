@@ -57,9 +57,8 @@ public class MainActivity extends AppCompatActivity
                 builder.setPositiveButton("Add", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        HashMap<String, String> friendToAdd = new HashMap<>();
-                        friendToAdd.put("friendUsername", input.getText().toString());
-                        SocketService.emit("addFriend", friendToAdd);
+                        String txt = input.getText().toString();
+                        System.out.println("----> " + txt);
                     }
                 });
                 builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -74,12 +73,12 @@ public class MainActivity extends AppCompatActivity
         });
 
         SocketService.getSocket().on("newFriendAdded", (Object... data) -> {
-            JSONObject friend = ((JSONObject)data[0]);
+            JSONArray friend = ((JSONArray)data[0]);
 
             this.runOnUiThread(() -> {
                 try {
-                    friendlist.putIfAbsent((String) friend.get("Username"), (Integer) friend.getInt("ID"));
-                    menu.add((String) friend.get("Username"));
+                    friendlist.putIfAbsent((String) friend.getJSONArray(0).get(1), (Integer) friend.getJSONArray(0).get(0));
+                    menu.add((String) friend.getJSONArray(0).get(1));
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -100,10 +99,6 @@ public class MainActivity extends AppCompatActivity
         SocketService.getSocket().on("friendlistReturned", (Object... data) -> {
             JSONArray friends = ((JSONArray)data[0]);
             friendlist.clear();
-
-            if(friends == null) {
-                return;
-            }
 
             for(int i = 0; i < friends.length(); i++) {
                 try {
@@ -186,7 +181,19 @@ public class MainActivity extends AppCompatActivity
                 put("otherUserID", String.valueOf((int)friendlist.get(item.getTitle())));
             }});
 
-            //SocketService.get
+            SocketService.getSocket().on("joinedRoom", (Object... data) -> {
+                JSONObject room = ((JSONObject)data[0]);
+                try {
+                    Intent intent = new Intent(MainActivity.this, ChatActivity.class);
+                    Bundle b = new Bundle();
+                    b.putInt("roomID", room.getInt("roomID"));
+                    intent.putExtras(b);
+                    startActivity(intent);
+                    finish();
+                    } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            });
             return true;
 
         } else {

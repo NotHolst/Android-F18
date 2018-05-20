@@ -64,13 +64,12 @@ app.post('/register', (req, res) => {
 
 });
 
-var connections = []
+var connections = {}
 
 io.on('connection', (client) => {
     console.log("Client connected.");
 
     client.on('authenticate', (data) => {
-        console.log("client attempting auth")
         let user;
         try {
             user = jwt.verify(data.token, JWT_SECRET);
@@ -79,7 +78,7 @@ io.on('connection', (client) => {
             return;
         }
         console.log(user.Username + " authenticated with token: " + data.token);
-        connections.push({ userID: user.ID, socket: client });
+        connections[user.ID] = {socket: client};
     })
 
     client.on('createRoom', (data) => {
@@ -95,10 +94,13 @@ io.on('connection', (client) => {
         if (!otherUserID) {
             return;
         }
-        let roomID = db.createRoom(user.ID, data.otherUserID);
+        let roomID = db.createRoom(user.ID, otherUserID);
         let responseData = { roomID: roomID };
-        connections.find(x => x.userID = user.ID).socket.emit('joinedRoom', data);
-        connections.find(x => x.userID = data.otherUserID).socket.emit('joinedRoom', data);
+        console.log('sending joinedRoom to ' + user.Username)
+        client.emit('joinedRoom', responseData);
+        if(connections[otherUserID]){
+            connections[otherUserID].socket.emit('joinedRoom', responseData);
+        }
     });
 
     client.on('addToRoom', (data) => {
@@ -148,8 +150,9 @@ io.on('connection', (client) => {
         let roomID = data.roomID;
         if (message && roomID) {
             let msg = db.createMessage(user.ID, roomID, message);
-            io.to(roomID).emit('message', msg)
+            io.emit('message', msg)
         }
+        console.log(data)
 
     });
 
@@ -162,9 +165,15 @@ io.on('connection', (client) => {
             return;
         }
 
-        let friendID = data.friendID;
-        db.addFriend(user.ID, friendID);
-        client.emit("newFriendAdded", db.user(friendID));
+        let friendUsername = data.friendUsername;
+        let friend = db.userByUsername(friendUsername);
+        if(friend != undefined){
+            db.addFriend(user.ID, friend.ID);
+            client.emit("newFriendAdded", friend);
+            if(connections[friend.ID]){
+                connections[friend.ID].socket.emit("newFriendAdded", user);
+            }
+        }
     });
 
     client.on('getFriends', (data) => {
@@ -191,22 +200,6 @@ io.on('connection', (client) => {
         }
 
         client.emit("getFriendsResponse", db.getRooms(user.ID));
-    });
-
-    client.on('joinRoom', (data) => {
-        let user;
-        try {
-            user = jwt.verify(data.token, JWT_SECRET);
-        } catch (err) {
-            client.emit('invalidToken');
-            return;
-        }
-
-        let roomID = data.roomID;
-        if (roomID && db.userIsInRoom(user.ID, roomID)) {
-            client.join(roomID);
-        }
-
     });
 
     client.on('disconnect', function () {

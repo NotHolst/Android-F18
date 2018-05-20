@@ -43,10 +43,9 @@ var facade = {
      */
     createMessage(userID, roomID, content) {
         let res = db.run(
-            "INSERT INTO Messages (Sender, RoomID, Timestamp, Content) VALUES [?,?,?,?]"
-            [userID, roomID, Date.now(), content]
+            "INSERT INTO Messages (Sender, RoomID, Timestamp, Content) VALUES ("+userID+","+roomID+","+Date.now()+",'"+content+"')"
         );
-        return res.length == 1 ? {
+        return res > 0 ? {
             Sender: userID,
             RoomID: roomID,
             Timestamp: Date.now(), // yes, this will be slightly different.
@@ -64,8 +63,13 @@ var facade = {
         return res.length == 1 ? res[0] : undefined;
     },
 
+    userByUsername(username){
+        let res = db.run("SELECT * FROM Users WHERE Username = ?", [username])
+        return res.length == 1 ? res[0] : undefined;
+    },
+
     addFriend(userOne, userTwo) {
-        let res = db.run("INSERT INTO Friendships (UserOne, UserTwo, Status) VALUES (?,?,'Pending')",
+        let res = db.run("INSERT INTO Friendships (UserOne, UserTwo) VALUES (?,?)",
             [userOne, userTwo]);
     },
 
@@ -87,10 +91,14 @@ var facade = {
         (select Content from Messages where RoomID = m.RoomID ORDER BY Timestamp desc limit 1) as lastMessage
         FROM RoomMemberships m
         INNER JOIN Users u on m.UserID = u.ID
-        WHERE RoomID in (Select RoomID from RoomMemberships WHERE UserID = 1)
+        WHERE RoomID in (Select RoomID from RoomMemberships WHERE UserID = ?)
         GROUP BY RoomID
-        ` [userId, userId]);
+        ` [userId]);
         return res;
+    },
+    userIsInRoom(userID, roomID){
+        let res = db.run("SELECT * FROM RoomMemberships WHERE UserID = ? AND RoomID = ?", [userID, roomID])
+        return res.length == 1;
     }
 }
 

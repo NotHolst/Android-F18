@@ -1,14 +1,6 @@
 package dk.sdu.androidchatclient;
 
-import android.app.LoaderManager.LoaderCallbacks;
-import android.content.CursorLoader;
-import android.content.Intent;
-import android.content.Loader;
-import android.database.Cursor;
-import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.support.v7.app.AppCompatActivity;
 import android.view.KeyEvent;
 import android.view.View;
@@ -18,22 +10,14 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 import com.github.nkzawa.socketio.client.IO;
 import com.github.nkzawa.socketio.client.Socket;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * A chat activity for two users.
@@ -44,18 +28,22 @@ public class ChatActivity extends AppCompatActivity {
     private EditText mMessageTextView;
     private TextView mConversation;
 
-    private Socket socket;
+    private int roomID;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_Chat);
+        setContentView(R.layout.activity_chat);
 
-        try {
-            socket = IO.socket("http://localhost:3000");
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
+        roomID = getIntent().getExtras().getInt("roomID", -1);
+        if(roomID == -1){
+            finish();
         }
+
+
+        SocketService.emit("joinRoom", new HashMap<String, String>(){{
+            put("roomID", String.valueOf(roomID));
+        }});
 
         mMessageTextView = (EditText) findViewById(R.id.messageText);
         mConversation = (TextView) findViewById(R.id.conversation);
@@ -71,7 +59,7 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
 
-        Button mSendMessageButton = (Button) findViewById(R.id.send_message);
+        Button mSendMessageButton = findViewById(R.id.send_message);
         mSendMessageButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -79,8 +67,13 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
 
-        socket.on("message", (data) -> {
-            mConversation.setText(data.toString());
+        SocketService.getSocket().on("message", (data) -> {
+            JSONObject msg = ((JSONObject)data[0]);
+            try {
+                mConversation.setText(msg.getString("Content"));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         });
 
     }
@@ -92,9 +85,10 @@ public class ChatActivity extends AppCompatActivity {
 
         HashMap<String, String> message = new HashMap<>();
 
-        message.put("message", mMessageTextView.toString());
+        message.put("message", mMessageTextView.getText().toString());
+        message.put("roomID", String.valueOf(roomID));
 
-        socket.emit("sendMessage", message);
+        SocketService.emit("sendMessage", message);
     }
 
 
