@@ -72,11 +72,22 @@ var facade = {
         let res = db.run(`
         SELECT u.ID, u.Username, u.Nickname, u.Status FROM Friendships f 
         INNER JOIN Users u on f.UserTwo = u.ID
-        WHERE UserOne = ?
+        WHERE UserOne = `+ userId + ` 
         UNION
         SELECT u.ID, u.Username, u.Nickname, u.Status FROM Friendships f 
         INNER JOIN Users u on f.UserOne = u.ID
-        WHERE UserTwo = ?
+        WHERE UserTwo = ` + userId);
+        return res.length > 0 ? res[0].values : undefined;
+    },
+
+    getRooms(userId) {
+        let res = db.run(`
+        SELECT m.RoomID, group_concat(u.Nickname, ', ') as Title, 
+        (select Content from Messages where RoomID = m.RoomID ORDER BY Timestamp desc limit 1) as lastMessage
+        FROM RoomMemberships m
+        INNER JOIN Users u on m.UserID = u.ID
+        WHERE RoomID in (Select RoomID from RoomMemberships WHERE UserID = 1)
+        GROUP BY RoomID
         ` [userId, userId]);
         return res;
     }

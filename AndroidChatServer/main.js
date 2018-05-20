@@ -161,6 +161,20 @@ io.on('connection', (client) => {
         }
         
         client.emit("getFriendsResponse", db.getFriends(user.ID));
+        console.log(user.ID, db.getFriends(user.ID));
+    });
+
+    client.on('getRooms', (data) => {
+        let user;
+        
+        try {
+            user = jwt.verify(data.token, JWT_SECRET);
+        } catch (err) {
+            client.emit('invalidToken');
+            return;
+        }
+        
+        client.emit("getFriendsResponse", db.getRooms(user.ID));
     });
 
     client.on('joinRoom', (data) => {
