@@ -147,7 +147,7 @@ io.on('connection', (client) => {
 
         let friendID = data.friendID;
         db.addFriend(user.ID, friendID);
-
+        client.emit("newFriendAdded", db.user(friendID));
     });
 
     client.on('getFriends', (data) => {
@@ -160,8 +160,7 @@ io.on('connection', (client) => {
             return;
         }
         
-        client.emit("getFriendsResponse", db.getFriends(user.ID));
-        console.log(user.ID, db.getFriends(user.ID));
+        client.emit("friendlistReturned", db.getFriends(user.ID));
     });
 
     client.on('getRooms', (data) => {
