@@ -34,4 +34,5 @@ dependencies {
 
     // Socket.io client for android
     implementation 'com.github.nkzawa:socket.io-client:0.3.0'
+    implementation 'com.android.volley:volley:1.1.0'
 }
