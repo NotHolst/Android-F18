@@ -42,9 +42,13 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-
-        startActivity(new Intent(this, LoginActivity.class));
-        finish();
+        if(getSharedPreferences("AndroidChatApplication", 0)
+                .getString("token", null) == null) {
+            System.out.println(getSharedPreferences("AndroidChatApplication", 0)
+                    .getString("token", null));
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
+        }
     }
 
     @Override
@@ -74,6 +78,16 @@ public class MainActivity extends AppCompatActivity
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
+        }
+
+        if (id == R.id.action_logout) {
+            getSharedPreferences("AndroidChatApplication", 0)
+                    .edit()
+                    .remove("token")
+                    .commit();
+
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
         }
 
         return super.onOptionsItemSelected(item);

@@ -3,6 +3,8 @@ package dk.sdu.androidchatclient;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -29,7 +31,19 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static android.Manifest.permission.READ_CONTACTS;
@@ -55,6 +69,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      * Keep track of the login task to ensure we can cancel it if requested.
      */
     private UserLoginTask mAuthTask = null;
+    boolean LoginSuccess = false;
 
     // UI references.
     private EditText mUsernameView;
@@ -152,38 +167,48 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         mUsernameView.setError(null);
         mPasswordView.setError(null);
 
-        // Store values at the time of the login attempt.
-        String email = mUsernameView.getText().toString();
-        String password = mPasswordView.getText().toString();
-
         boolean cancel = false;
         View focusView = null;
 
-        // Check for a valid password, if the user entered one.
-        if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
-            mPasswordView.setError(getString(R.string.error_invalid_password));
-            focusView = mPasswordView;
-            cancel = true;
-        }
+        showProgress(true);
 
-        if (cancel) {
-            // There was an error; don't attempt login and focus the first
-            // form field with an error.
-            focusView.requestFocus();
-        } else {
-            // Show a progress spinner, and kick off a background task to
-            // perform the user login attempt.
-            
+        String url ="http://9c1c4d4f.ngrok.io/authenticate";
+        HashMap<String, String> JSONRequest = new HashMap<>();
+        JSONRequest.put("username", mUsernameView.getText().toString());
+        JSONRequest.put("password", mPasswordView.getText().toString());
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest
+                (Request.Method.POST, url, new JSONObject(JSONRequest), new Response.Listener<JSONObject>() {
 
-            showProgress(true);
-            mAuthTask = new UserLoginTask(email, password);
-            mAuthTask.execute((Void) null);
-        }
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            validateResponse((String) response.get("status"), (String) response.get("token"));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        // TODO: Handle error
+
+                    }
+                });
+
+        Volley.newRequestQueue(this).add(jsonObjectRequest);
     }
 
-    private boolean isEmailValid(String email) {
-        //TODO: Replace this with your own logic
-        return email.contains("@");
+    private void validateResponse(String status, String token) {
+        if(status.equals("success")) {
+            getSharedPreferences("AndroidChatApplication", 0)
+                    .edit()
+                    .putString("token", token)
+                    .commit();
+            startActivity(new Intent(this, MainActivity.class));
+            finish();
+        } else {
+            showProgress(false);
+        }
     }
 
     private boolean isPasswordValid(String password) {
