@@ -161,6 +161,17 @@ io.on('connection', (client) => {
         console.log(user);
     });
 
+    client.on('getRooms', (data) => {
+        let user;
+        try {
+            user = jwt.verify(data.token, JWT_SECRET);
+        } catch (err) {
+            client.emit('invalidToken');
+            return;
+        }
+        db
+    })
+
     client.on('joinRoom', (data) => {
         let user;
         try {

@@ -172,7 +172,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         showProgress(true);
 
-        String url ="http://9c1c4d4f.ngrok.io/authenticate";
+        String url ="http://212.130.118.231:3000/authenticate";
         HashMap<String, String> JSONRequest = new HashMap<>();
         JSONRequest.put("username", mUsernameView.getText().toString());
         JSONRequest.put("password", mPasswordView.getText().toString());

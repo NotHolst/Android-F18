@@ -67,7 +67,18 @@ var facade = {
         let res = db.run("INSERT INTO Friendships (UserOne, UserTwo, Status) VALUES (?,?,'Pending')",
             [userOne, userTwo]);
     },
-    
+    getFriends(userId) {
+        let res = db.run(`
+        SELECT u.ID, u.Username, u.Nickname, u.Status FROM Friendships f 
+        INNER JOIN Users u on f.UserTwo = u.ID
+        WHERE UserOne = ?
+        UNION
+        SELECT u.ID, u.Username, u.Nickname, u.Status FROM Friendships f 
+        INNER JOIN Users u on f.UserOne = u.ID
+        WHERE UserTwo = ?
+        ` [userId, userId]);
+
+    }
 }
 
 db.connect('database/database.db')
