@@ -1,9 +1,12 @@
 package dk.sdu.androidchatclient;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v7.app.AlertDialog;
+import android.text.InputType;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -13,6 +16,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.EditText;
 
 import com.github.nkzawa.emitter.Emitter;
 
@@ -43,9 +47,42 @@ public class MainActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
+                builder.setTitle("Please enter your friend's name");
+
+                final EditText input = new EditText(view.getContext());
+                input.setInputType(InputType.TYPE_CLASS_TEXT);
+                builder.setView(input);
+
+                builder.setPositiveButton("Add", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String txt = input.getText().toString();
+                        System.out.println("----> " + txt);
+                    }
+                });
+                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+
+                builder.show();
             }
+        });
+
+        SocketService.getSocket().on("newFriendAdded", (Object... data) -> {
+            JSONArray friend = ((JSONArray)data[0]);
+
+            this.runOnUiThread(() -> {
+                try {
+                    friendlist.putIfAbsent((String) friend.getJSONArray(0).get(1), (Integer) friend.getJSONArray(0).get(0));
+                    menu.add((String) friend.getJSONArray(0).get(1));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            });
         });
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -58,7 +95,8 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
         menu = navigationView.getMenu();
         friendlist = new HashMap<>();
-        SocketService.getSocket().on("getFriendsResponse", (Object... data) -> {
+
+        SocketService.getSocket().on("friendlistReturned", (Object... data) -> {
             JSONArray friends = ((JSONArray)data[0]);
             friendlist.clear();
 
