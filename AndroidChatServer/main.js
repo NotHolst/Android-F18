@@ -78,7 +78,7 @@ io.on('connection', (client) => {
             return;
         }
         console.log(user.Username + " authenticated with token: " + data.token);
-        connections[user.ID] = {socket: client};
+        connections[user.ID] = { socket: client };
     })
 
     client.on('createRoom', (data) => {
@@ -94,12 +94,20 @@ io.on('connection', (client) => {
         if (!otherUserID) {
             return;
         }
+        let existingRoom = db.hasRoom(user.ID, otherUserID);
+        if (existingRoom != -1) {
+            client.emit('joinedRoom', { roomID: existingRoom });
+            if (connections[otherUserID]) {
+                connections[otherUserID].socket.emit('joinedRoom', { roomID: existingRoom });
+            }
+            return;
+        }
+
         let roomID = db.createRoom(user.ID, otherUserID);
-        let responseData = { roomID: roomID };
         console.log('sending joinedRoom to ' + user.Username)
-        client.emit('joinedRoom', responseData);
-        if(connections[otherUserID]){
-            connections[otherUserID].socket.emit('joinedRoom', responseData);
+        client.emit('joinedRoom', { roomID: roomID });
+        if (connections[otherUserID]) {
+            connections[otherUserID].socket.emit('joinedRoom', { roomID: roomID });
         }
     });
 
@@ -156,6 +164,18 @@ io.on('connection', (client) => {
 
     });
 
+    client.on('getMessages', (data) => {
+        let user;
+        try {
+            user = jwt.verify(data.token, JWT_SECRET);
+        } catch (err) {
+            client.emit('invalidToken');
+            return;
+        }
+        let roomID = data.roomID;
+        client.emit('roomMessages', db.getRoomMessages(roomID));
+    })
+
     client.on('addFriend', (data) => {
         let user;
         try {
@@ -167,10 +187,10 @@ io.on('connection', (client) => {
 
         let friendUsername = data.friendUsername;
         let friend = db.userByUsername(friendUsername);
-        if(friend != undefined){
+        if (friend != undefined) {
             db.addFriend(user.ID, friend.ID);
             client.emit("newFriendAdded", friend);
-            if(connections[friend.ID]){
+            if (connections[friend.ID]) {
                 connections[friend.ID].socket.emit("newFriendAdded", user);
             }
         }
@@ -185,7 +205,7 @@ io.on('connection', (client) => {
             client.emit('invalidToken');
             return;
         }
-        
+
         client.emit("friendlistReturned", db.getFriends(user.ID));
     });
 

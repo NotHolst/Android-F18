@@ -16,6 +16,7 @@ import java.util.HashMap;
 import com.github.nkzawa.socketio.client.IO;
 import com.github.nkzawa.socketio.client.Socket;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -34,19 +35,31 @@ public class ChatActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+        mMessageTextView = (EditText) findViewById(R.id.messageText);
+        mConversation = (TextView) findViewById(R.id.conversation);
 
         roomID = getIntent().getExtras().getInt("roomID", -1);
         if(roomID == -1){
             finish();
         }
 
+        SocketService.getSocket().on("roomMessages", data -> {
+            JSONArray messages = ((JSONArray)data[0]);
+            for(int i = 0; i < messages.length(); i++){
+                try {
+                    String text = (String) messages.getJSONObject(i).getString("Content");
+                    mConversation.append(text + "\r\n");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
 
-        SocketService.emit("joinRoom", new HashMap<String, String>(){{
+        SocketService.emit("getMessages", new HashMap<String, String>(){{
             put("roomID", String.valueOf(roomID));
         }});
 
-        mMessageTextView = (EditText) findViewById(R.id.messageText);
-        mConversation = (TextView) findViewById(R.id.conversation);
+
 
         mMessageTextView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -70,7 +83,7 @@ public class ChatActivity extends AppCompatActivity {
         SocketService.getSocket().on("message", (data) -> {
             JSONObject msg = ((JSONObject)data[0]);
             try {
-                mConversation.setText(msg.getString("Content"));
+                mConversation.append(msg.getString("Content") + "\r\n");
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -91,6 +104,10 @@ public class ChatActivity extends AppCompatActivity {
         SocketService.emit("sendMessage", message);
     }
 
+    @Override
+    public void onBackPressed() {
+        finish();
+    }
 
 }
 

@@ -30,6 +30,20 @@ var facade = {
         return roomID;
     },
 
+    hasRoom(userID, otherUseriD){
+        let res = db.run(`
+        Select count(UserID) as count, RoomID from RoomMemberships
+        where UserID in (1,11)
+        group by RoomID
+        `)
+
+        if(res.length > 0){
+            return res[0].values[0][1];
+        }else{
+            return -1;
+        }
+    },
+
     addUserToRoom(userID, roomID) {
         let res = db.run("INSERT INTO RoomMemberships (UserID, RoomID) VALUES (?,?)", [userID, roomID]);
     },
@@ -51,6 +65,11 @@ var facade = {
             Timestamp: Date.now(), // yes, this will be slightly different.
             Content: content
         } : undefined;
+    },
+
+    getRoomMessages(roomID){
+        let res = db.run("SELECT * FROM Messages WHERE RoomID = ?", [roomID])
+        return res;
     },
 
     userExists(username) {
