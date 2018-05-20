@@ -25,7 +25,12 @@
         <activity
             android:name=".LoginActivity"
             android:label="@string/title_activity_login"
-            android:theme="@style/DefaultTheme"></activity>
+            android:theme="@style/DefaultTheme" />
+
+        <service
+            android:name=".SocketService"
+            android:enabled="true"
+            android:exported="true"></service>
     </application>
 
 </manifest>
