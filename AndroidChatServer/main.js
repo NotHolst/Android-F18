@@ -39,7 +39,7 @@ app.post('/register', (req, res) => {
     let nickname = req.body.nickname;
 
     if (username == undefined || password == undefined) {
-        client.send('registrationError', {
+        client.emit('registrationError', {
             message: 'Please supply username and password'
         })
     }
@@ -71,7 +71,7 @@ io.on('connection', (client) => {
         try {
             user = jwt.verify(data.token, JWT_SECRET);
         } catch (err) {
-            client.send('invalidToken');
+            client.emit('invalidToken');
             return;
         }
 
@@ -88,7 +88,7 @@ io.on('connection', (client) => {
         try {
             user = jwt.verify(data.token, JWT_SECRET);
         } catch (err) {
-            client.send('invalidToken');
+            client.emit('invalidToken');
             return;
         }
 
@@ -104,7 +104,7 @@ io.on('connection', (client) => {
         try {
             user = jwt.verify(data.token, JWT_SECRET);
         } catch (err) {
-            client.send('invalidToken');
+            client.emit('invalidToken');
             return;
         }
 
@@ -113,7 +113,7 @@ io.on('connection', (client) => {
             return;
         }
         db.leaveRoom(user.ID, roomID);
-        client.send('roomLeft', { roomID: roomID });
+        client.emit('roomLeft', { roomID: roomID });
         io.to(roomID).emit('userLeft', user);
     });
 
@@ -122,7 +122,7 @@ io.on('connection', (client) => {
         try {
             user = jwt.verify(data.token, JWT_SECRET);
         } catch (err) {
-            client.send('invalidToken');
+            client.emit('invalidToken');
             return;
         }
 
@@ -140,7 +140,7 @@ io.on('connection', (client) => {
         try {
             user = jwt.verify(data.token, JWT_SECRET);
         } catch (err) {
-            client.send('invalidToken');
+            client.emit('invalidToken');
             return;
         }
 
@@ -149,12 +149,16 @@ io.on('connection', (client) => {
 
     });
 
+    client.on('getFriends', (data) => {
+        
+    });
+
     client.on('joinRoom', (data) => {
         let user;
         try {
             user = jwt.verify(data.token, JWT_SECRET);
         } catch (err) {
-            client.send('invalidToken');
+            client.emit('invalidToken');
             return;
         }
 
