@@ -65,7 +65,8 @@ app.post('/register', (req, res) => {
 });
 
 io.on('connection', (client) => {
-
+    console.log("Client connected.");
+    
     client.on('createRoom', (data) => {
         let user;
         try {
@@ -150,7 +151,14 @@ io.on('connection', (client) => {
     });
 
     client.on('getFriends', (data) => {
-        
+        let user;
+        try {
+            user = jwt.verify(data.token, JWT_SECRET);
+        } catch (err) {
+            client.emit('invalidToken');
+            return;
+        }
+        console.log(user);
     });
 
     client.on('joinRoom', (data) => {
