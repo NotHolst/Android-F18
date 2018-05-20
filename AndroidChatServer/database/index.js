@@ -19,7 +19,7 @@ var facade = {
      * @param {string} password 
      */
     auth(username, password) {
-        let res = db.run("SELECT * FROM Users WHERE Username = ? AND Password = ?");
+        let res = db.run("SELECT * FROM Users WHERE Username = ? AND Password = ?", [username, password]);
         return res.length == 1 ? res[0] : undefined;
     },
 
@@ -54,10 +54,20 @@ var facade = {
     },
 
     userExists(username) {
-        let res = db.run("SELECT * FROM Users WHERE Username = ?", ['Holst']);
+        let res = db.run("SELECT * FROM Users WHERE Username = ?", [username]);
         return res.length == 1;
-    }
+    },
 
+    user(userId) {
+        let res = db.run("SELECT * FROM Users WHERE ID = ?", [userId]);
+        return res.length == 1 ? res[0] : undefined;
+    },
+
+    addFriend(userOne, userTwo) {
+        let res = db.run("INSERT INTO Friendships (UserOne, UserTwo, Status) VALUES (?,?,'Pending')",
+            [userOne, userTwo]);
+    },
+    
 }
 
 db.connect('database/database.db')
