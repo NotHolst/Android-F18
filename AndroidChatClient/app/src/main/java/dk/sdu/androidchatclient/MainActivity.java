@@ -14,15 +14,19 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
+    private Menu menu;
+    private HashMap<String, String> friendlist;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        SocketService.setSharedPreferences(getSharedPreferences("AndroidChatApplication", 0));
+
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -44,24 +48,19 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+        menu = navigationView.getMenu();
+        friendlist = new HashMap<>();
+        updateFriendlist();
+
+        HashMap<String, String> test = new HashMap<>();
+        test.put("Username", "Holst2");
+        SocketService.emit("getFriends", test);
 
         if(getSharedPreferences("AndroidChatApplication", 0)
                 .getString("token", null) == null) {
-            System.out.println(getSharedPreferences("AndroidChatApplication", 0)
-                    .getString("token", null));
             startActivity(new Intent(this, LoginActivity.class));
             finish();
         }
-
-        SocketConnection.getSocket().connect();
-        JSONObject json = new JSONObject();
-        try {
-            json.put("token", getSharedPreferences("AndroidChatApplication", 0).getString("token", null));
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        SocketConnection.getSocket().emit("getFriends", json);
-
     }
 
     @Override
@@ -109,25 +108,18 @@ public class MainActivity extends AppCompatActivity
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
-        int id = item.getItemId();
-
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
-        }
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
-        return true;
+
+        if(friendlist.containsKey(item.getTitle())) {
+            // Open chat activity w/ user
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public void updateFriendlist() {
+        //friendlist.putIfAbsent()
     }
 }
