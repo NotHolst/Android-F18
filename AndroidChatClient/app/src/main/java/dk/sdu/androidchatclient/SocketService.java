@@ -19,6 +19,12 @@ public class SocketService extends Service {
     private static Socket _socket = null;
     private static SharedPreferences _sharedPreferences = null;
 
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
     public static void setSharedPreferences(SharedPreferences sharedPreferences) {
         _sharedPreferences = sharedPreferences;
     }
@@ -34,6 +40,18 @@ public class SocketService extends Service {
         }
 
         return _socket;
+    }
+
+    public static void emit(String eventName) {
+        JSONObject json = new JSONObject();
+
+        try {
+            json.put("token", _sharedPreferences.getString("token", null));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        getSocket().emit(eventName, json);
     }
 
     public static void emit(String eventName, HashMap<String, String> args) {
@@ -53,14 +71,6 @@ public class SocketService extends Service {
             e.printStackTrace();
         }
 
-
-
         getSocket().emit(eventName, json);
-    }
-
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
     }
 }

@@ -52,10 +52,6 @@ public class MainActivity extends AppCompatActivity
         friendlist = new HashMap<>();
         updateFriendlist();
 
-        HashMap<String, String> test = new HashMap<>();
-        test.put("Username", "Holst2");
-        SocketService.emit("getFriends", test);
-
         if(getSharedPreferences("AndroidChatApplication", 0)
                 .getString("token", null) == null) {
             startActivity(new Intent(this, LoginActivity.class));
