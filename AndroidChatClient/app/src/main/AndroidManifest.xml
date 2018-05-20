@@ -28,7 +28,7 @@
             android:theme="@style/DefaultTheme" />
 
         <service
-            android:name=".SocketService"
+            android:name=".NotificationService"
             android:enabled="true"
             android:exported="true"></service>
     </application>

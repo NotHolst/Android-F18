@@ -41,17 +41,19 @@ public class SocketService extends Service {
 
         try {
             json.put("token", _sharedPreferences.getString("token", null));
+
+            args.forEach((identifier, value) -> {
+                try {
+                    json.put(identifier, value);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            });
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
-        args.forEach((identifier, value) -> {
-            try {
-                json.put(identifier, value);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        });
+
 
         getSocket().emit(eventName, json);
     }
