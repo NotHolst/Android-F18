@@ -57,7 +57,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private UserLoginTask mAuthTask = null;
 
     // UI references.
-    private AutoCompleteTextView mUsernameView;
+    private EditText mUsernameView;
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
@@ -67,7 +67,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         // Set up the login form.
-        mUsernameView = (AutoCompleteTextView) findViewById(R.id.username);
+        mUsernameView = (EditText) findViewById(R.id.username);
         populateAutoComplete();
 
         mPasswordView = (EditText) findViewById(R.id.password);
@@ -166,17 +166,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             cancel = true;
         }
 
-        // Check for a valid email address.
-        if (TextUtils.isEmpty(email)) {
-            mUsernameView.setError(getString(R.string.error_field_required));
-            focusView = mUsernameView;
-            cancel = true;
-        } else if (!isEmailValid(email)) {
-            mUsernameView.setError(getString(R.string.error_invalid_email));
-            focusView = mUsernameView;
-            cancel = true;
-        }
-
         if (cancel) {
             // There was an error; don't attempt login and focus the first
             // form field with an error.
@@ -184,6 +173,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         } else {
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
+            
+
             showProgress(true);
             mAuthTask = new UserLoginTask(email, password);
             mAuthTask.execute((Void) null);
@@ -261,24 +252,12 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             emails.add(cursor.getString(ProfileQuery.ADDRESS));
             cursor.moveToNext();
         }
-
-        addEmailsToAutoComplete(emails);
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> cursorLoader) {
 
     }
-
-    private void addEmailsToAutoComplete(List<String> emailAddressCollection) {
-        //Create adapter to tell the AutoCompleteTextView what to show in its dropdown list.
-        ArrayAdapter<String> adapter =
-                new ArrayAdapter<>(LoginActivity.this,
-                        android.R.layout.simple_dropdown_item_1line, emailAddressCollection);
-
-        mUsernameView.setAdapter(adapter);
-    }
-
 
     private interface ProfileQuery {
         String[] PROJECTION = {
